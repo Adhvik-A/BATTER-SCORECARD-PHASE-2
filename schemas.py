@@ -1,11 +1,13 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from enum import Enum
 
 
-# -----------------------------
-# ENUMS
-# -----------------------------
+class Phase(str, Enum):
+    powerplay = "powerplay"
+    middle = "middle"
+    death = "death"
+
+
 class ExtraType(str, Enum):
     wide = "wide"
     no_ball = "no_ball"
@@ -13,41 +15,29 @@ class ExtraType(str, Enum):
     leg_bye = "leg_bye"
 
 
-# -----------------------------
-# BALL EVENT
-# -----------------------------
 class BallEvent(BaseModel):
-    striker_id: str
-    striker: str
-
-    bowler_id: str
-    bowler: str
-
-    runs_off_bat: int = Field(ge=0)
-    extras: int = Field(default=0, ge=0)
-    extra_type: Optional[ExtraType] = None
-
-    is_legal_delivery: bool = True
-    wicket_fell: bool = False
-
-    @field_validator("runs_off_bat", "extras")
-    @classmethod
-    def non_negative(cls, v):
-        if v < 0:
-            raise ValueError("Runs cannot be negative")
-        return v
+    shot: str
+    bat_runs: int = Field(ge=0, le=6)
+    is_legal: bool = True
+    phase: Phase | None = None
+    extra_type: ExtraType | None = None
 
 
-# -----------------------------
-# MATCH PAYLOAD
-# -----------------------------
-class MatchPayload(BaseModel):
-    match_id: str
-    innings_id: str
+class BatterScorecardRequest(BaseModel):
+    player_id: int
+    match_id: int
+    innings_id: int
+    name: str
+    balls: list[BallEvent]
 
-    batting_team: str
-    bowling_team: str
 
-    events: List[BallEvent]
-
-    include_extras: bool = False
+class BatterScorecard(BaseModel):
+    player_id: int
+    match_id: int
+    innings_id: int
+    name: str
+    runs: int
+    balls: int
+    fours: int
+    sixes: int
+    strike_rate: float
