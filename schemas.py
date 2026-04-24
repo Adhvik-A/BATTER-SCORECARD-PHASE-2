@@ -1,51 +1,53 @@
-from pydantic import BaseModel, Field
+from typing import List, Optional
+from pydantic import BaseModel, Field, field_validator
+from enum import Enum
 
 
 # -----------------------------
-# INPUT MODEL (BALL EVENT)
+# ENUMS
+# -----------------------------
+class ExtraType(str, Enum):
+    wide = "wide"
+    no_ball = "no_ball"
+    bye = "bye"
+    leg_bye = "leg_bye"
+
+
+# -----------------------------
+# BALL EVENT
 # -----------------------------
 class BallEvent(BaseModel):
-    shot: str
-    bat_runs: int = Field(ge=0, le=6)
-    is_legal: bool = True
+    striker_id: str
+    striker: str
+
+    bowler_id: str
+    bowler: str
+
+    runs_off_bat: int = Field(ge=0)
+    extras: int = Field(default=0, ge=0)
+    extra_type: Optional[ExtraType] = None
+
+    is_legal_delivery: bool = True
+    wicket_fell: bool = False
+
+    @field_validator("runs_off_bat", "extras")
+    @classmethod
+    def non_negative(cls, v):
+        if v < 0:
+            raise ValueError("Runs cannot be negative")
+        return v
 
 
 # -----------------------------
-# HISTORY MODEL (FOR ANALYTICS ONLY)
+# MATCH PAYLOAD
 # -----------------------------
-class HistoricalShot(BaseModel):
-    shot: str
-    runs: int
+class MatchPayload(BaseModel):
+    match_id: str
+    innings_id: str
 
+    batting_team: str
+    bowling_team: str
 
-# -----------------------------
-# WAGON WHEEL ENTRY
-# -----------------------------
-class ShotEntry(BaseModel):
-    shot: str
-    runs: int
-    angle: float
+    events: List[BallEvent]
 
-
-# -----------------------------
-# STRONG ZONE OUTPUT
-# -----------------------------
-class Zone(BaseModel):
-    name: str
-    strength: int
-
-
-# -----------------------------
-# FINAL BATTER STATE (OUTPUT)
-# -----------------------------
-class BatterState(BaseModel):
-    name: str
-    runs: int = 0
-    balls: int = 0
-    fours: int = 0
-    sixes: int = 0
-
-    # computed fields (NEVER user input)
-    strike_rate: float = 0.0
-    wagon_wheel: list[ShotEntry] = []
-    strong_zones: list[Zone] = []
+    include_extras: bool = False
