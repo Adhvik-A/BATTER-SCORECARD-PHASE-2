@@ -1,64 +1,63 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-
-from schemas import MatchPayload
-from services import compute_match_summary
+from schemas import BatterScorecardRequest
+from services import build_scorecard
 
 app = FastAPI(
-    title="Cricket Score Analytics API",
-    description="Event-driven cricket innings engine that computes full match analytics from ball-by-ball data.",
-    version="2.0"
+    title="Batter Scorecard API",
+    description="Build full batter scorecard from ball-by-ball data",
+    version="1.0"
 )
 
 
-# -----------------------------
-# CORS
-# -----------------------------
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-
-# -----------------------------
-# ROOT ENDPOINT
-# -----------------------------
-@app.get("/")
+@app.get("/", tags=["Root"], summary="API Root", description="Basic API info endpoint")
 def root():
     return {
         "meta": {
-            "api": "cricket-score-api",
-            "version": "2.0",
+            "api": "batter-scorecard",
+            "version": "1.0",
             "status": "running"
         },
-        "message": "Welcome to Cricket Score Analytics API",
-        "available_endpoints": [
-            "/health",
-            "/scoreboard"
-        ]
+        "data": {
+            "message": "Batter Scorecard API is live",
+            "endpoints": [
+                "/health",
+                "/batter-scorecard"
+            ]
+        },
+        "errors": None
     }
 
 
-# -----------------------------
-# HEALTH CHECK
-# -----------------------------
-@app.get("/health")
+@app.get("/health", tags=["Health"], summary="Health Check")
 def health():
     return {"status": "ok"}
 
 
-# -----------------------------
-# MAIN API
-# -----------------------------
-@app.post("/scoreboard")
-def scoreboard(payload: MatchPayload):
+
+@app.post(
+    "/batter-scorecard",
+    tags=["Scorecard"],
+    summary="Generate Batter Scorecard",
+    description="Processes full ball-by-ball input and returns complete batter scorecard"
+)
+def batter_scorecard(payload: BatterScorecardRequest):
+
     try:
-        return compute_match_summary(payload.model_dump())
+        result = build_scorecard(payload)
+
+        return {
+            "meta": {
+                "api": "batter-scorecard",
+                "version": "1.0",
+                "status": "success"
+            },
+            "data": result,
+            "errors": None
+        }
+
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))
