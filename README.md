@@ -1,227 +1,178 @@
-README.md
-Markdown
-# 📘 Cricket Score Analytics API
-
-### ● API Objective
-This API generates a complete cricket innings summary using ball-by-ball events.  
-It calculates score, run rate, player stats, phases, and extras — all from raw data.
+# Batter Scorecard API
 
 ---
 
-### ● Endpoints
-* **GET** `/`
-* **GET** `/health`
-* **POST** `/scoreboard`
+## API Objective
+
+Build a full batter scorecard from ball-by-ball input.
 
 ---
 
-### ● Input Schema (Example)
+## Endpoint
+
+GET /
+GET /health
+POST /batter-scorecard
+
+---
+
+## Input Schema
+
 ```json
 {
-  "match_id": "match_01",
-  "innings_id": "innings_1",
-  "batting_team": "RCB",
-  "bowling_team": "MI",
-  "include_extras": true,
-  "events": [
+  "player_id": "int",
+  "match_id": "int",
+  "innings_id": "int",
+  "name": "string",
+  "balls": [
     {
-      "striker_id": "p1",
-      "striker": "Virat Kohli",
-      "bowler_id": "p101",
-      "bowler": "Bumrah",
-      "runs_off_bat": 1,
-      "extras": 0,
-      "is_legal_delivery": true,
-      "wicket_fell": false
-    },
-    {
-      "striker_id": "p2",
-      "striker": "Faf du Plessis",
-      "bowler_id": "p101",
-      "bowler": "Bumrah",
-      "runs_off_bat": 0,
-      "extras": 1,
-      "extra_type": "wide",
-      "is_legal_delivery": false,
-      "wicket_fell": false
+      "shot": "string",
+      "bat_runs": "int (0-6)",
+      "is_legal": "boolean",
+      "phase": "powerplay | middle | death (optional)",
+      "extra_type": "wide | no_ball | bye | leg_bye (optional)"
     }
   ]
 }
-● Output Schema (Example)
-JSON
+Output Schema
 {
   "meta": {
-    "api": "event-match-summary",
-    "version": "3.1",
+    "api": "batter-scorecard",
+    "version": "1.0",
     "status": "success"
   },
   "data": {
-    "match_id": "match_01",
-    "innings_id": "innings_1",
-    "batting_team": "RCB",
-    "bowling_team": "MI",
-    "score": "6/0",
-    "overs": "0.2",
-    "run_rate": 18.0,
-    "total_runs": 6,
-    "wickets": 0,
-    "fours": 1,
-    "sixes": 0,
-    "legal_balls": 2,
-    "recent_balls": ["1", "0+1", "4"],
-    "batters": [
-      {
-        "player_id": "p2",
-        "name": "Faf du Plessis",
-        "runs": 4,
-        "balls": 1,
-        "fours": 1,
-        "sixes": 0,
-        "strike_rate": 400.0
-      }
-    ],
-    "bowlers": [
-      {
-        "player_id": "p101",
-        "name": "Bumrah",
-        "balls": 2,
-        "runs_conceded": 6,
-        "wickets": 0,
-        "economy": 18.0
-      }
-    ],
-    "top_batter": {
-      "player_id": "p2",
-      "name": "Faf du Plessis",
-      "runs": 4
-    },
-    "top_bowler": {
-      "player_id": "p101",
-      "name": "Bumrah",
-      "wickets": 0
-    },
-    "phases": {
-      "powerplay": {
-        "runs": 6,
-        "balls": 2,
-        "overs": "0.2",
-        "run_rate": 18.0
-      },
-      "middle": {
-        "runs": 0,
-        "balls": 0,
-        "overs": "0.0",
-        "run_rate": 0
-      },
-      "death": {
-        "runs": 0,
-        "balls": 0,
-        "overs": "0.0",
-        "run_rate": 0
-      }
-    },
-    "extras": {
-      "total": 1,
-      "breakdown": {
-        "wide": 1,
-        "no_ball": 0,
-        "bye": 0,
-        "leg_bye": 0
-      }
-    }
+    "player_id": "int",
+    "match_id": "int",
+    "innings_id": "int",
+    "name": "string",
+    "runs": "int",
+    "balls": "int",
+    "fours": "int",
+    "sixes": "int",
+    "strike_rate": "float"
   },
   "errors": null
 }
-● GET Endpoints
-Root GET /
-
-JSON
+Example Request
+{
+  "player_id": 18,
+  "match_id": 101,
+  "innings_id": 1,
+  "name": "Virat Kohli",
+  "balls": [
+    { "shot": "cover_drive", "bat_runs": 4, "is_legal": true },
+    { "shot": "pull_shot", "bat_runs": 6, "is_legal": true },
+    { "shot": "defence", "bat_runs": 0, "is_legal": true }
+  ]
+}
+Example Response
 {
   "meta": {
-    "api": "cricket-score-api",
-    "version": "3.1",
+    "api": "batter-scorecard",
+    "version": "1.0",
+    "status": "success"
+  },
+  "data": {
+    "player_id": 18,
+    "match_id": 101,
+    "innings_id": 1,
+    "name": "Virat Kohli",
+    "runs": 10,
+    "balls": 3,
+    "fours": 1,
+    "sixes": 1,
+    "strike_rate": 333.33
+  },
+  "errors": null
+}
+Example Request (GET /)
+curl http://localhost:8000/
+Example Response (GET /)
+{
+  "meta": {
+    "api": "batter-scorecard",
+    "version": "1.0",
     "status": "running"
   },
-  "message": "Event-based Cricket Analytics API",
-  "endpoints": ["/health", "/scoreboard"]
+  "data": {
+    "message": "API is live",
+    "endpoints": [
+      "/",
+      "/health",
+      "/batter-scorecard"
+    ]
+  },
+  "errors": null
 }
-Health GET /health
-
-JSON
+Example Request (GET /health)
+curl http://localhost:8000/health
+Example Response (GET /health)
 {
   "status": "ok"
 }
-🔴 Validation Errors
-400 Bad Request
-
-Runs or extras negative
-
-Invalid extra_type
-
-Empty events list
-
-Wicket with runs > 0
-
-Same batting & bowling team
-
-JSON
+Validation Errors
+400 Bad Request — Invalid Runs
 {
-  "detail": "Runs/extras cannot be negative"
+  "detail": "Invalid runs"
 }
-422 Validation Error
+400 Bad Request — Invalid Shot Type
+{
+  "detail": "Invalid shot type"
+}
+422 Unprocessable Entity — Missing Fields
+{
+  "detail": "Field required"
+}
+422 Unprocessable Entity — Invalid Data Type
+{
+  "detail": "value is not a valid integer"
+}
+Integration Usage
+cURL
+curl -X POST "http://localhost:8000/batter-scorecard" \
+-H "Content-Type: application/json" \
+-d '{
+  "player_id": 18,
+  "match_id": 101,
+  "innings_id": 1,
+  "name": "Virat Kohli",
+  "balls": [
+    { "shot": "cover_drive", "bat_runs": 4, "is_legal": true }
+  ]
+}'
+Python (requests)
+import requests
 
-Missing required fields
+url = "http://localhost:8000/batter-scorecard"
 
-Invalid data types
+payload = {
+    "player_id": 18,
+    "match_id": 101,
+    "innings_id": 1,
+    "name": "Virat Kohli",
+    "balls": [
+        {"shot": "cover_drive", "bat_runs": 4, "is_legal": True}
+    ]
+}
 
-Enum mismatch
-
-500 Internal Error
-
-Unexpected server failure
-
-🔗 Integration Usage
-Using Fetch (Frontend)
-
-JavaScript
-fetch("[https://score-phase-2.onrender.com/scoreboard](https://score-phase-2.onrender.com/scoreboard)", {
+response = requests.post(url, json=payload)
+print(response.json())
+JavaScript (fetch)
+fetch("http://localhost:8000/batter-scorecard", {
   method: "POST",
   headers: {
     "Content-Type": "application/json"
   },
-  body: JSON.stringify(payload)
-}).then(res => res.json()).then(data => console.log(data)).catch(err => console.error(err));
-Using Axios
-
-JavaScript
-import axios from "axios";
-
-axios.post("[https://score-phase-2.onrender.com/scoreboard](https://score-phase-2.onrender.com/scoreboard)", payload)
-  .then(res => console.log(res.data))
-  .catch(err => console.error(err));
-UI Usage (Frontend)
-Main Header: Show score, overs, run rate
-
-Tables: Display batters & bowlers
-
-Cards: Highlight top batter and top bowler
-
-Timeline: Render recent balls
-
-Tooltips: Show extras breakdown
-
-Visuals: Use phases for charts
-
-Best Practices
-Keep events in order
-
-Use consistent player_id
-
-Validate before sending
-
-Use include_extras only when needed
-
-# Conclusion
-This is a fully event-driven cricket analytics engine, not just a scoreboard.
-
-It is accurate, scalable, and ready for real-time systems.
+  body: JSON.stringify({
+    player_id: 18,
+    match_id: 101,
+    innings_id: 1,
+    name: "Virat Kohli",
+    balls: [
+      { shot: "cover_drive", bat_runs: 4, is_legal: true }
+    ]
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data));
